@@ -1,0 +1,128 @@
+<script type="text/javascript" src="vue.js"></script>
+<link rel="stylesheet" type="text/css" href="index.css">
+
+<!--for work delete button correctly import this-->
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/todomvc-app-css@2.1.0/index.css">
+<!--for work delete button correctly import this-->
+
+<section class="todoapp">
+  <header class="header">
+    <h1>todos</h1>
+    <input v-model="newTodo" class="new-todo"
+      @keyup.enter="addTodo()"
+      autocomplete="off"
+      placeholder="What needs to be done?">
+  </header>
+  	<section class="main">
+	    <input class="toggle-all" id="toggle-all" type="checkbox" v-model="allDone">
+	    <label for="toggle-all">Mark all as complete</label>
+		<ul class="todo-list">
+			<li v-for="todo in filteredTodos" class="todo" :class="{completed:todo.completed,editing:todo==editingTodo}">
+				<div class="view">
+					<input class="toggle" type="checkbox" v-model="todo.completed">
+					<label @dblclick="editTodo(todo)">{{todo.title}}</label>
+					<button @click="deleteToDo(todo)" class="destroy"></button>
+				</div>
+				<input class="edit" v-model="todo.title" @keyup.enter="doneEditing()" type="text" @keyup.esc="cancelEditing()">
+			</li>
+		</ul>
+  	</section>
+	<footer class="footer">
+		<span class="todo-count">
+		  <strong>{{remainingTodos}}</strong> {{remainingText}} left
+		</span>
+		<ul class="filters">
+		  <li><a href="#" @click.prevent="visibility='all'" 
+		  	:class="{selected:visibility=='all'}">All</a></li>
+		  <li><a href="#" @click.prevent="visibility='active'" 
+		  	:class="{selected:visibility=='active'}">Active</a></li>
+		  <li><a href="#" @click.prevent="visibility='completed'" 
+		  	:class="{selected:visibility=='completed'}">Completed</a></li>
+		</ul>
+		<button class="clear-completed" @click="removeCompleted()">
+		  Clear completed
+		</button>
+	</footer>
+</section>
+<script type="text/javascript">
+	var filters={
+		'all':function(todos){
+			return todos;
+		},
+		'active':function(todos){
+			return todos.filter(function(todos){
+				return ! todos.completed;
+			});
+		},
+		'completed':function(todos){
+			return todos.filter(function(todos){
+				return todos.completed;
+			});
+		}
+	}
+	new Vue({
+		'el':'.todoapp',
+		data:{
+			todos:[
+				{title:'test 1',completed:true},
+				{title:'test 2',completed:false}
+			],
+			newTodo:'',
+			visibility:'all',
+			editingTodo:null,
+			oldeditingTodoTitle:null
+		},
+		computed:{
+			filteredTodos:function(){
+				return filters[this.visibility](this.todos);
+			},
+			remainingTodos:function(){
+				return filters.active(this.todos).length;
+			},
+			remainingText:function(){
+				if(filters.active(this.todos).length>1)
+					return 'items';
+				return 'item';
+			},
+			allDone:{
+				//is all complete?
+				get:function(){
+					return filters.active(this.todos).length===0;					
+				},
+				//when selected checkbox all true else all false
+				set:function(value){
+					this.todos.forEach(function(todo){
+						todo.completed=value;
+					});
+				}
+			}
+		},
+		methods:{
+			deleteToDo:function  (todo) {
+				this.todos.splice(this.todos.indexOf(todo),1);
+			},
+			addTodo: function(){
+				if(this.newTodo=='')
+					return;
+				this.todos.push({'title':this.newTodo,completed:false});
+				this.newTodo='';
+			},
+			removeCompleted:function(){
+				this.todos=filters.active(this.todos);
+			},
+			editTodo:function(todo){
+				this.oldeditingTodoTitle=todo.title;
+				this.editingTodo=todo;
+			},
+			doneEditing:function(){
+				if(this.editingTodo.title=='')
+					this.deleteToDo(this.editingTodo);
+				this.editingTodo=null;
+			},
+			cancelEditing:function(){
+				this.editingTodo.title=this.oldeditingTodoTitle;
+				this.editingTodo=null;
+			}	
+		}
+	});
+</script>
